@@ -14,6 +14,7 @@ query ($username: String) {
     MediaListCollection (userName: $username, type: ANIME, status_not: REPEATING) {
         lists {
             isCustomList
+            name
             entries {
                 media {
                     title {

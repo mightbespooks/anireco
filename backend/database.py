@@ -16,7 +16,7 @@ class User(Base):
     __tablename__ = "users"
 
     user_id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    username: Mapped[str] = mapped_column(nullable=False)
+    username: Mapped[str] = mapped_column()
     last_updated: Mapped[str] = mapped_column()
     pfp: Mapped[str] = mapped_column()
 
@@ -24,17 +24,17 @@ class Anime(Base):
     __tablename__ = "anime"
 
     anime_id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    anilist_id: Mapped[int] = mapped_column(nullable=False)
-    title: Mapped[dict] = mapped_column(JSON, nullable=False)
-    format: Mapped[str] = mapped_column()
-    episodes: Mapped[int] = mapped_column()
-    status: Mapped[str] = mapped_column()
-    start_date: Mapped[date] = mapped_column()
-    end_date: Mapped[date] = mapped_column()
-    mean_score: Mapped[int] = mapped_column()
-    popularity: Mapped[int] = mapped_column()
-    source: Mapped[str] = mapped_column()
-    cover: Mapped[str] = mapped_column()
+    anilist_id: Mapped[int] = mapped_column(unique=True)
+    title: Mapped[dict] = mapped_column(JSON)
+    format: Mapped[str] = mapped_column(nullable=True)
+    episodes: Mapped[int] = mapped_column(nullable=True)
+    status: Mapped[str] = mapped_column(nullable=True)
+    start_date: Mapped[date | None] = mapped_column(nullable=True) 
+    end_date: Mapped[date | None] = mapped_column(nullable=True)
+    mean_score: Mapped[int] = mapped_column(nullable=True)
+    popularity: Mapped[int] = mapped_column(nullable=True)
+    source: Mapped[str] = mapped_column(nullable=True)
+    cover: Mapped[str] = mapped_column(nullable=True)
 
 class User_Anime(Base):
     __tablename__ = "users_anime"

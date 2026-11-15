@@ -1,0 +1,84 @@
+IMPORT_USER = """
+query ($username: String) {
+    User (name: $username) {
+        __typename
+        avatar {
+            large
+        }
+        statistics {
+            anime {
+                meanScore
+            }
+        }
+    }
+    MediaListCollection (userName: $username, type: ANIME, status_not: REPEATING) {
+        lists {
+            isCustomList
+            entries {
+                media {
+                    title {
+                        english
+                        romaji
+                    }
+                    genres
+                    tags {
+                        name
+                        rank
+                    }
+                    studios {
+                        edges {
+                            node {
+                                id
+                                name
+                            }
+                            isMain
+                        }
+                    }
+                    id
+                    format
+                    episodes
+                    status
+                    startDate {
+                        year
+                        month
+                        day
+                    }
+                    endDate {
+                        year
+                        month
+                        day
+                    }
+                    meanScore
+                    popularity
+                    source
+                    status
+                    coverImage {
+                        large
+                    }
+                    staff(sort: RELEVANCE, page: 1, perPage: 100) {
+                        edges {
+                            role
+                            node {
+                                id
+                                name {
+                                    first
+                                    last
+                                }
+                            }
+                        }
+                    }
+                    recommendations (sort: RATING_DESC, page: 1, perPage: 5) {
+                        nodes {
+                            mediaRecommendation {
+                                id
+                            }
+                        }
+                    }
+                }
+                status
+                score
+            }
+        }
+    }
+}
+"""

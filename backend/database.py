@@ -1,9 +1,14 @@
+import sys
 from datetime import date
 from pathlib import Path
 from sqlalchemy import create_engine, JSON, ForeignKey
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, sessionmaker
 
-engine = create_engine("sqlite:///database.db", echo=False)
+BASE_DIR = Path(__file__).resolve().parent
+DATABASE_URL = f"sqlite:///{BASE_DIR / 'database.db'}"
+engine = create_engine(DATABASE_URL, echo=False)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
 class Base(DeclarativeBase):
     pass
 
@@ -12,8 +17,8 @@ class User(Base):
 
     user_id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     username: Mapped[str] = mapped_column(nullable=False)
-    last_updated: Mapped[str | None]
-    pfp: Mapped[str | None]
+    last_updated: Mapped[str] = mapped_column()
+    pfp: Mapped[str] = mapped_column()
 
 class Anime(Base):
     __tablename__ = "anime"
@@ -133,5 +138,21 @@ class AnilistRecommendations(Base):
     recommended_anime_id: Mapped[int] = mapped_column(ForeignKey("anime.anime_id"), primary_key=True)
     rank: Mapped[int] = mapped_column()
 
-Base.metadata.create_all(engine)
-print(f"Database created successfully, located at: {Path(engine.url.database).resolve()}")
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+if __name__ == "__main__":
+    db_path = Path(engine.url.database).resolve()
+
+    if db_path.exists():
+        if input(f"An existing database was found. Would you like to overwrite it? (Y/N) >>> ") != "Y":
+            sys.exit(0)
+
+        db_path.unlink()
+
+    Base.metadata.create_all(engine)
+    print(f"Database created successfully, located at: {db_path}")

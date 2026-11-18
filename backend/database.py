@@ -4,10 +4,16 @@ from pathlib import Path
 from sqlalchemy import create_engine, JSON, ForeignKey
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, sessionmaker
 
-BASE_DIR = Path(__file__).resolve().parent
+BASE_DIR = Path(__file__).resolve().parent.parent
 DATABASE_URL = f"sqlite:///{BASE_DIR / 'database.db'}"
 engine = create_engine(DATABASE_URL, echo=False)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+INITIAL_GENRES = [
+    "Action", "Adventure", "Comedy", "Drama", "Ecchi", "Fantasy", 
+    "Horror", "Mahou Shoujo", "Mecha", "Music", "Mystery", "Psychological", 
+    "Romance", "Sci-Fi", "Slice of Life", "Sports", "Supernatural", "Thriller"
+]
 
 class Base(DeclarativeBase):
     pass
@@ -42,7 +48,7 @@ class User_Anime(Base):
     user_id: Mapped[int] = mapped_column(ForeignKey("users.user_id"), primary_key=True)
     anime_id: Mapped[int] = mapped_column(ForeignKey("anime.anime_id"), primary_key=True)
     list_status: Mapped[str] = mapped_column()
-    score: Mapped[float] = mapped_column()
+    score: Mapped[float | None] = mapped_column(nullable=True)
 
 class Genre(Base):
     __tablename__ = "genres"
@@ -109,24 +115,25 @@ class UserStudioAffinity(Base):
     count: Mapped[int] = mapped_column()
     multiplier: Mapped[float] = mapped_column()
 
-class Director(Base):
-    __tablename__ = "directors"
+class Staff(Base):
+    __tablename__ = "staff"
 
-    director_id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    anilist_id: Mapped[int] = mapped_column(nullable=False)
+    staff_id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    anilist_id: Mapped[int] = mapped_column(unique=True, nullable=False)
     name: Mapped[str] = mapped_column(nullable=False)
 
-class AnimeDirector(Base):
-    __tablename__ = "anime_directors"
+class AnimeStaff(Base):
+    __tablename__ = "anime_staff"
 
-    director_id: Mapped[int] = mapped_column(ForeignKey("directors.director_id"), primary_key=True)
     anime_id: Mapped[int] = mapped_column(ForeignKey("anime.anime_id"), primary_key=True)
+    staff_id: Mapped[int] = mapped_column(ForeignKey("staff.staff_id"), primary_key=True)
+    role: Mapped[str] = mapped_column(primary_key=True)
 
-class UserDirectorAffinity(Base):
-    __tablename__ = "user_director_affinities"
+class UserStaffAffinity(Base):
+    __tablename__ = "user_staff_affinities"
 
     user_id: Mapped[int] = mapped_column(ForeignKey("users.user_id"), primary_key=True)
-    director_id: Mapped[int] = mapped_column(ForeignKey("directors.director_id"), primary_key=True)
+    staff_id: Mapped[int] = mapped_column(ForeignKey("staff.staff_id"), primary_key=True)
     mean: Mapped[float] = mapped_column()
     count: Mapped[int] = mapped_column()
     multiplier: Mapped[float] = mapped_column()
@@ -147,12 +154,14 @@ def get_db():
 
 if __name__ == "__main__":
     db_path = Path(engine.url.database).resolve()
-
-    if db_path.exists():
-        if input(f"An existing database was found. Would you like to overwrite it? (Y/N) >>> ") != "Y":
-            sys.exit(0)
-
-        db_path.unlink()
-
     Base.metadata.create_all(engine)
+
+    db = SessionLocal()
+    try:
+        for genre in INITIAL_GENRES:
+            db.add(Genre(name=genre))
+        db.commit()
+    finally:
+        db.close()
+
     print(f"Database created successfully, located at: {db_path}")
